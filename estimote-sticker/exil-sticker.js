@@ -4,8 +4,8 @@ var debugMore = require('debug')('box-verbose');
 var EstimoteSticker = require('./estimote-sticker');
 var sse = require('./exil-sse.js');
 
-var THRESHOLD = -45;
-var RSSI_WIN_SIZE = 3;
+var THRESHOLD = -41;
+var RSSI_WIN_SIZE = 6;
 var WIN_TIMEOUT = 8000;
 
 var lidUUID = "d0d3fa86ca7645ec9bd96af4374cd69a87f92364";
@@ -19,17 +19,23 @@ function win_to_state(rssi_win) {
   var count = 0;
   var sum = 0;
   var rssi_ave;
-
+  /*
   for (var i in rssi_win) {
     sum += rssi_win[i];
     count++;
   }
+  */
 
-  if (count === 0)
+  if (rssi_win.length === 0)
     return { rssi_ave: undefined, state: undefined };
+  
+  rssi_win = rssi_win.slice();
+  rssi_win.sort();
 
-  rssi_ave = sum / count;
-
+  rssi_ave = (
+    rssi_win[Math.floor((rssi_win.length - 1) / 2)] +
+    rssi_win[Math.ceil((rssi_win.length - 1) / 2)]) / 2;
+  console.log("foobar" + rssi_ave);
   if (rssi_ave < THRESHOLD)
     return { rssi_ave: Math.floor(rssi_ave), state: "OUT" };
   else
@@ -58,7 +64,7 @@ function getLidState(z_state) {
 }
 
 function discoverLid(sticker) {
-  console.log("~~~ Lid: ");
+  console.log("~~~ Lid: :) ");
   console.log(sticker.acceleration);
   /* acceleration.z === ~ +1024 -> upside down*/
   /* acceleration.z ===a ~     0 -> sideways */
