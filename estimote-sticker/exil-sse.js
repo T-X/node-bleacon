@@ -19,8 +19,8 @@ http.createServer(function (req, res) {
   req.connection.addListener("close", function () {
     resHandle = undefined;
   }, false);
-}).listen(8080, "127.0.0.1");
-//}).listen(8080, "0.0.0.0");
+//}).listen(8080, "127.0.0.1");
+}).listen(8080, "0.0.0.0");
 
 function pushStickerEvent(uuid, state) {
   if (resHandle === undefined) {
