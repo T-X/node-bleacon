@@ -4,7 +4,8 @@ var debugMore = require('debug')('box-verbose');
 var EstimoteSticker = require('./estimote-sticker');
 var sse = require('./exil-sse.js');
 
-var THRESHOLD = -41;
+var THRESHOLD_TO_IN = -43;
+var THRESHOLD_TO_OUT = -48;
 var RSSI_WIN_SIZE = 6;
 var WIN_TIMEOUT = 8000;
 
@@ -12,10 +13,11 @@ var lidUUID = "d0d3fa86ca7645ec9bd96af4374cd69a87f92364";
 
 
 var stickers = {};
+var oldStates = {};
 var lidState = "OPEN";
 
 // true: in, false: out
-function win_to_state(rssi_win) {
+function win_to_state(rssi_win, old_state, uuid) {
   var count = 0;
   var sum = 0;
   var rssi_ave;
@@ -36,7 +38,14 @@ function win_to_state(rssi_win) {
     rssi_win[Math.floor((rssi_win.length - 1) / 2)] +
     rssi_win[Math.ceil((rssi_win.length - 1) / 2)]) / 2;
   console.log("foobar" + rssi_ave);
-  if (rssi_ave < THRESHOLD)
+
+  var local_threshold = THRESHOLD_TO_IN;
+
+  if (old_state.state === "IN") {
+    local_threshold = THRESHOLD_TO_OUT;
+  }
+
+  if (rssi_ave < local_threshold)
     return { rssi_ave: Math.floor(rssi_ave), state: "OUT" };
   else
     return { rssi_ave: Math.floor(rssi_ave), state: "IN" };
@@ -86,8 +95,8 @@ function discoverItem(uuid, rssi) {
   var rssi_win = [];
   var old_state;
 
-  if (stickers[uuid] !== undefined)
-    old_state = win_to_state(stickers[uuid].rssi_win);
+  if (oldStates[uuid] !== undefined)
+    old_state = oldStates[uuid]; // win_to_state(stickers[uuid].rssi_win);
   else
     old_state = { rssi_ave: undefined, state: undefined };
 
@@ -104,7 +113,10 @@ function discoverItem(uuid, rssi) {
 
   rssi_win.push(rssi);
 
-  var new_state = win_to_state(rssi_win);
+  var new_state = win_to_state(rssi_win, old_state, uuid);
+
+  oldStates[uuid] = new_state;
+
 
   debugMore({ new_state: new_state.state, rssi_win: rssi_win, rssi_ave: new_state.rssi_ave });
 
