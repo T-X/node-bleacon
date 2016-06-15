@@ -9,6 +9,16 @@ var THRESHOLD_TO_OUT = -48;
 var RSSI_WIN_SIZE = 6;
 var WIN_TIMEOUT = 8000;
 
+var CORRECT = {
+  "d0d3fa86ca7645ec9bd96af4d62d3ca7158a442d": [-43, -46], // Taschenmesser
+  "d0d3fa86ca7645ec9bd96af47567870c5a2e07f1": [-54, -56], // Smartphone
+  "d0d3fa86ca7645ec9bd96af4509d21d91f7094f5": [-41, -48], // Erinnerungen
+  "d0d3fa86ca7645ec9bd96af421cd478197c9638b": [-39, -45], // Taschenlampe
+  "d0d3fa86ca7645ec9bd96af4d927ca5fe7f3eb3f": [-42, -45], // Kuscheltier
+//  "d0d3fa86ca7645ec9bd96af479286228f1897216": [-46, -50], // Medizin - alt
+//  "d0d3fa86ca7645ec9bd96af42e7a03b23a6f759b": ... // Medizin - neu
+};
+
 var lidUUID = "d0d3fa86ca7645ec9bd96af4374cd69a87f92364";
 
 
@@ -41,8 +51,16 @@ function win_to_state(rssi_win, old_state, uuid) {
 
   var local_threshold = THRESHOLD_TO_IN;
 
+  if (CORRECT[uuid] !== undefined) {
+    local_threshold = CORRECT[uuid][0];
+    console.log("correcting");
+  }
+
   if (old_state.state === "IN") {
     local_threshold = THRESHOLD_TO_OUT;
+    if (CORRECT[uuid] !== undefined) {
+      local_threshold = CORRECT[uuid][1];
+    }
   }
 
   if (rssi_ave < local_threshold)
