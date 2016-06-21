@@ -19,15 +19,11 @@ http.createServer(function (req, res) {
   console.log(req);
 
   connections.add(res);
-//  resHandles[res[host]]
-//  console.log("+++ " + );
-
   res.writeHead(200, {"Content-Type":"text/event-stream", "Cache-Control":"no-cache", "Connection":"keep-alive","Access-Control-Allow-Origin":"*"});
 
   var closingFunc = conCleanerFactory(res);
 
   req.connection.addListener("close", closingFunc, false);
-//}).listen(8080, "127.0.0.1");
 }).listen(8080, "0.0.0.0");
 
 function pushStickerEvent(uuid, state) {
@@ -40,10 +36,6 @@ function pushStickerEvent(uuid, state) {
     c.write("event: statechange\n");
     c.write(stateChangeStr);
   });
-//  resHandle.write('data: foobar\n\n');
-/*  var stateChangeStr = 'data: { "uuid": "' + uuid + '", "state": "' + state + '" }\n\n';*/
-//  console.log('data: { "uuid": "' + uuid + '", "state": "' + state + '" }\n\n');
-
 }
 
 function pushLidEvent(state) {
@@ -54,11 +46,3 @@ function pushLidEvent(state) {
     c.write(stateChangeStr);
   });
 }
-
-/*function pushEvent(eventStr) {
-	for (var h in resHandles) {
-		for (var p in resHandles[h]) {
-			console.log("+++ Got: host: " + h + ", port: " + p);
-		}
-	}
-}*/
