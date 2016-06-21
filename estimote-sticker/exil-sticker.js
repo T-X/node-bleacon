@@ -10,16 +10,16 @@ var RSSI_WIN_SIZE = 6;
 var WIN_TIMEOUT = 8000;
 
 var CORRECT = {
-  "d0d3fa86ca7645ec9bd96af4d62d3ca7158a442d": [-43, -46], // Taschenmesser
-  "d0d3fa86ca7645ec9bd96af47567870c5a2e07f1": [-54, -56], // Smartphone
-  "d0d3fa86ca7645ec9bd96af4509d21d91f7094f5": [-41, -48], // Erinnerungen
-  "d0d3fa86ca7645ec9bd96af421cd478197c9638b": [-39, -45], // Taschenlampe
-  "d0d3fa86ca7645ec9bd96af4d927ca5fe7f3eb3f": [-42, -45], // Kuscheltier
-//  "d0d3fa86ca7645ec9bd96af479286228f1897216": [-46, -50], // Medizin - alt
-//  "d0d3fa86ca7645ec9bd96af42e7a03b23a6f759b": ... // Medizin - neu
+  "d62d3ca7158a442d": [-43, -46], // Taschenmesser
+  "7567870c5a2e07f1": [-54, -56], // Smartphone
+  "509d21d91f7094f5": [-41, -48], // Erinnerungen
+  "21cd478197c9638b": [-39, -45], // Taschenlampe
+  "d927ca5fe7f3eb3f": [-42, -45], // Kuscheltier
+//  "79286228f1897216": [-46, -50], // Medizin - alt
+//  "2e7a03b23a6f759b": ... // Medizin - neu
 };
 
-var lidUUID = "d0d3fa86ca7645ec9bd96af4374cd69a87f92364";
+var lidID = "374cd69a87f92364";
 
 
 var stickers = {};
@@ -27,7 +27,7 @@ var oldStates = {};
 var lidState = "OPEN";
 
 // true: in, false: out
-function win_to_state(rssi_win, old_state, uuid) {
+function win_to_state(rssi_win, old_state, id) {
   var count = 0;
   var sum = 0;
   var rssi_ave;
@@ -51,15 +51,15 @@ function win_to_state(rssi_win, old_state, uuid) {
 
   var local_threshold = THRESHOLD_TO_IN;
 
-  if (CORRECT[uuid] !== undefined) {
-    local_threshold = CORRECT[uuid][0];
+  if (CORRECT[id] !== undefined) {
+    local_threshold = CORRECT[id][0];
     console.log("correcting");
   }
 
   if (old_state.state === "IN") {
     local_threshold = THRESHOLD_TO_OUT;
-    if (CORRECT[uuid] !== undefined) {
-      local_threshold = CORRECT[uuid][1];
+    if (CORRECT[id] !== undefined) {
+      local_threshold = CORRECT[id][1];
     }
   }
 
@@ -70,11 +70,11 @@ function win_to_state(rssi_win, old_state, uuid) {
 }
 
 
-function winTimeoutHandler(uuid) {
-  debugMore("Timeout for: " + uuid);
+function winTimeoutHandler(id) {
+  debugMore("Timeout for: " + id);
   
-  sse.pushStickerEvent(uuid, "OUT");
-  stickers[uuid] = undefined;
+  sse.pushStickerEvent(id, "OUT");
+  stickers[id] = undefined;
 }
 
 var LID_TOLERANCE = 0.2;
@@ -109,21 +109,21 @@ function discoverLid(sticker) {
   sse.pushLidEvent(newLidState);
 }
 
-function discoverItem(uuid, rssi) {
+function discoverItem(id, rssi) {
   var rssi_win = [];
   var old_state;
 
-  if (oldStates[uuid] !== undefined)
-    old_state = oldStates[uuid]; // win_to_state(stickers[uuid].rssi_win);
+  if (oldStates[id] !== undefined)
+    old_state = oldStates[id]; // win_to_state(stickers[id].rssi_win);
   else
     old_state = { rssi_ave: undefined, state: undefined };
 
-  if (stickers[uuid] !== undefined) {
-    clearTimeout(stickers[uuid].timer);
-    rssi_win = stickers[uuid].rssi_win;
+  if (stickers[id] !== undefined) {
+    clearTimeout(stickers[id].timer);
+    rssi_win = stickers[id].rssi_win;
   }
 
-  debugMore(uuid + ":");
+  debugMore(id + ":");
   debugMore({ old_state: old_state.state, rssi_win: rssi_win, rssi_ave: old_state.rssi_ave });
 
   if (rssi_win.length >= RSSI_WIN_SIZE)
@@ -131,32 +131,32 @@ function discoverItem(uuid, rssi) {
 
   rssi_win.push(rssi);
 
-  var new_state = win_to_state(rssi_win, old_state, uuid);
+  var new_state = win_to_state(rssi_win, old_state, id);
 
-  oldStates[uuid] = new_state;
+  oldStates[id] = new_state;
 
 
   debugMore({ new_state: new_state.state, rssi_win: rssi_win, rssi_ave: new_state.rssi_ave });
 
   if (old_state.state !== new_state.state) {
-    debug(uuid + ": State changed to: " + new_state.state);
-    sse.pushStickerEvent(uuid, new_state.state);
+    debug(id + ": State changed to: " + new_state.state);
+    sse.pushStickerEvent(id, new_state.state);
   }
 
-  stickers[uuid] = { rssi_win: rssi_win };
-  stickers[uuid].timer = setTimeout(function() {
-     winTimeoutHandler(uuid);
+  stickers[id] = { rssi_win: rssi_win };
+  stickers[id].timer = setTimeout(function() {
+     winTimeoutHandler(id);
   }, WIN_TIMEOUT);
 }
 
 
 EstimoteSticker.on('discover', function(estimoteSticker) {
-  var uuid = estimoteSticker.uuid;
+  var id = estimoteSticker.id;
 
-  if (uuid === lidUUID)
+  if (id === lidID)
 	discoverLid(estimoteSticker);
   else
-	discoverItem(estimoteSticker.uuid, estimoteSticker.rssi);
+	discoverItem(estimoteSticker.id, estimoteSticker.rssi);
 });
 
 EstimoteSticker.startScanning();
