@@ -47,14 +47,11 @@ function win_to_state(rssi_win, old_state, id) {
   rssi_ave = (
     rssi_win[Math.floor((rssi_win.length - 1) / 2)] +
     rssi_win[Math.ceil((rssi_win.length - 1) / 2)]) / 2;
-  console.log("foobar" + rssi_ave);
 
   var local_threshold = THRESHOLD_TO_IN;
 
-  if (CORRECT[id] !== undefined) {
+  if (CORRECT[id] !== undefined)
     local_threshold = CORRECT[id][0];
-    console.log("correcting");
-  }
 
   if (old_state.state === "IN") {
     local_threshold = THRESHOLD_TO_OUT;
@@ -71,7 +68,7 @@ function win_to_state(rssi_win, old_state, id) {
 
 
 function winTimeoutHandler(id) {
-  debugMore("Timeout for: " + id);
+  debug(id + ": State changed to: OUT (timeout)");
   
   sse.pushStickerEvent(id, "OUT");
   stickers[id] = undefined;
@@ -91,20 +88,18 @@ function getLidState(z_state) {
 }
 
 function discoverLid(sticker) {
-  console.log("~~~ Lid: :) ");
-  console.log(sticker.acceleration);
+  debugMore("~~~ Lid:");
+  debugMore(sticker.acceleration);
   /* acceleration.z === ~ +1024 -> upside down*/
   /* acceleration.z ===a ~     0 -> sideways */
   /* acceleration.z === ~ -1024 -> face up */
 
   var newLidState = getLidState(sticker.acceleration.z);
 
-  console.log("+++ lidState: old: " + lidState + " new: " + newLidState);
-
   if (lidState === newLidState)
     return;
 
-  console.log("+++ lidState: changed!");
+  debug("lidState changed: Now " + newLidState);
   lidState = newLidState;
   sse.pushLidEvent(newLidState);
 }
