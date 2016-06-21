@@ -8,15 +8,11 @@ var connections = new Set();
 function conCleanerFactory(con) {
   return function() {
     connections.delete(con);
-    console.log("~~~ Connection closed: " + con.hostname + ", port " + con.port);
-    console.log(con);
   };
 }
 
 http.createServer(function (req, res) {
   var interval;
-  console.log("~~~ Got connection: " + res.hostname + ", port " + res.port);
-  console.log(req);
 
   connections.add(res);
   res.writeHead(200, {"Content-Type":"text/event-stream", "Cache-Control":"no-cache", "Connection":"keep-alive","Access-Control-Allow-Origin":"*"});
@@ -28,9 +24,6 @@ http.createServer(function (req, res) {
 
 function pushStickerEvent(uuid, state) {
   var stateChangeStr = 'data: { "type": "thing", "uuid": "' + uuid + '", "state": "' + state + '" }\n\n';
-
-  console.log("~~~ pushing sticker event to SSE clients");
-  console.log(stateChangeStr);
 
   connections.forEach(function (c) {
     c.write("event: statechange\n");
